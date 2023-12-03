@@ -1,0 +1,3 @@
+      Section%NAME%.destroyCore(self)
+      Section%NAME%.setupCore(self, ctrl, world)
+      SectionGenerated.setupPlatform(self, ctrl, world)

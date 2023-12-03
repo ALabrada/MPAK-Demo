@@ -1,0 +1,5 @@
+      ctrl.m
+        .compactMap { %SHOULD%($0) }
+        .receive(on: DispatchQueue.main)
+        .sink { v in %SINK% }
+        .store(in: &service.subscriptions)

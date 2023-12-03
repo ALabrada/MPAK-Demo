@@ -1,0 +1,7 @@
+    let %NAME%: %TYPE%
+    let %NAME% = CurrentValueSubject<%TYPE%, Never>(%DEFAULT%)
+    let %NAME%: AnyPublisher<%TYPE%, Never>
+    let model: PassthroughSubject<%MODULE%.Model, Never>
+    let net: () -> Net.Publisher
+    let %NAME% = PassthroughSubject<%TYPE%, Never>()
+    var %NAME%: %TYPE% = %DEFAULT%

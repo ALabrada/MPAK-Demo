@@ -1,0 +1,5 @@
+      _ %NAME%: %TYPE%
+      _ %NAME%: @escaping %TYPE%
+      _ %NAME%: AnyPublisher<%TYPE%, Never>
+      _ model: PassthroughSubject<%MODULE%.Model, Never>
+      _ net: @escaping () -> Net.Publisher

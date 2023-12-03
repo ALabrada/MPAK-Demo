@@ -1,0 +1,15 @@
+    // MARK: - SectionGenerated Core
+
+    static func setupPlatform(
+      _ core: Core,
+      _ ctrl: Controller,
+      _ world: World
+    ) {
+      // MARK: - SectionGenerated Core Actions
+
+%CORE_SECTION_GENERATED_ACTIONS%
+
+      // MARK: - SectionGenerated Core Pipes
+
+%CORE_SECTION_GENERATED_PIPES%
+    }

@@ -1,0 +1,4 @@
+      ctrl.m
+        .receive(on: DispatchQueue.main)
+        .sink { v in world.model.send(v) }
+        .store(in: &service.subscriptions)

@@ -1,0 +1,2 @@
+    let vm = VM()
+    var wnd: UIWindow?

@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+import os
+import sys
+from argparse import ArgumentParser
+from generateStructure import *
+from parseLines import *
+from readModuleSrc import *
+from Structure import *
+
+DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
+
+# Импорт из общей для всех генераторов директории.
+sys.path.append(f"{DIR}/../common")
+from modulePaths import *
+from readFile import *
+
+parser = ArgumentParser(prog='generate v3')
+parser.add_argument('module', type=str,
+                    help='the name of the module to generate')
+parser.add_argument('-i', '--input', type=str,
+                    help='The path and name of the input file')
+parser.add_argument('-o', '--output', type=str,
+                    help='The path of the output files')
+parser.add_argument('-s', '--source', type=str,
+                    help='The path of the source files')
+
+args = parser.parse_args()
+(PATH, MODULE) = modulePaths(args.module)
+
+print(f"Generating platform for module '{PATH}'...")
+
+FILE_IN = args.input or f"{DIR}/../../../Modules/{PATH}/{MODULE}.yml"
+DIR_OUT = args.output or f"{DIR}/../../../Modules/{PATH}/src/"
+FILE_OUT = os.path.join(DIR_OUT, f"{MODULE}.Generated.swift")
+
+# Читаем файл и разбираем его на ключи-значения.
+lines = readFile(FILE_IN)
+structure = Structure()
+parseLines(lines, structure)
+ORIG_SRC = args.source or f"{DIR}/../../../Modules/{structure.src.name}/src"
+structure.orig = readModuleSrc(ORIG_SRC, readFile)
+
+# Генерируем код.
+output = generateStructure(structure)
+
+# Сохраняем файл.
+with open(FILE_OUT, "w") as file:
+    file.write(output)

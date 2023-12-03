@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+import os
+import sys
+from Structure import *
+from generateFeatureToggle import *
+from parseLines import *
+
+DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
+MODULE = sys.argv[1]
+
+# Импорт из общей для всех генераторов директории.
+sys.path.append(f"{DIR}/../common")
+from readFile import *
+
+print(f"Генерируем сборный модуль '{MODULE}'...")
+
+MODULE_DIR = f"{DIR}/../../../Modules/{MODULE}"
+FILE_IN = f"{MODULE_DIR}/{MODULE}.yml"
+
+# Читаем файл и разбираем его на ключи-значения.
+lines = readFile(FILE_IN)
+structure = Structure()
+parseLines(lines, structure)
+structure.moduleDir = MODULE_DIR
+structure.module = MODULE
+
+# Генерируем модуль FeatureToggle.
+generateFeatureToggle(structure)

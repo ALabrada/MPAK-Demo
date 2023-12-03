@@ -1,0 +1,15 @@
+    // MARK: - SectionGenerated Service
+
+    static func setupPlatform(
+      _ ctrl: Controller,
+      _ service: Service,
+      _ world: World
+    ) {
+      // MARK: - SectionGenerated Service Actions
+
+%SERVICE_SECTION_GENERATED_ACTIONS%
+
+      // MARK: - SectionGenerated Service Pipes
+
+%SERVICE_SECTION_GENERATED_PIPES%
+    }

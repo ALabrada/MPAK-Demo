@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+import os
+import sys
+import subprocess
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+parser.add_argument('module', type=str,
+                    help='the name of the module to generate')
+parser.add_argument('-i', '--input', type=str,
+                    help='The path and name of the input file')
+
+args, _ = parser.parse_known_args()
+DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
+
+# Импорт из общей для всех генераторов директории.
+sys.path.append(f"{DIR}/common")
+from modulePaths import *
+
+
+(PATH, MODULE) = modulePaths(args.module)
+
+FILE_IN = args.input or f"{DIR}/../../Modules/{PATH}/{MODULE}.yml"
+
+# Запускаем указанную в файле YML версию генератора.
+with open(FILE_IN) as file:
+    ln = file.readline().rstrip()
+    version = ln[-1]
+    cmd = f"{DIR}/{version}/generate"
+    subprocess.call(args=[cmd] + sys.argv[1:])

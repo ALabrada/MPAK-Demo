@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+import os
+import sys
+from argparse import ArgumentParser
+
+parser = ArgumentParser(prog='generate v1')
+parser.add_argument('module', type=str,
+                    help='the name of the module to generate')
+parser.add_argument('-i', '--input', type=str,
+                    help='The path and name of the input file')
+parser.add_argument('-o', '--output', type=str,
+                    help='The path of the output files')
+
+args = parser.parse_args()
+DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
+MODULE = args.module
+
+def isNotKeyword(str):
+    keywords = [
+        "core",
+        "ex",
+        "recent",
+        "service",
+        "set",
+        "toggle",
+        "toggleNil",
+        "vm",
+        "$vm",
+        "world",
+    ]
+    return str not in keywords
+
+class CoreAction:
+    def __init__(self, func, sink):
+        self.func = func
+        self.sink = sink
+
+    def code(self):
+        return f"""
+      p.ctrl.m
+        .compactMap {{ {self.func}($0) }}
+        .receive(on: DispatchQueue.main)
+        .sink {{ [weak core = p.core] v in {self.sink} }}
+        .store(in: &p.core.subscriptions)
+""".replace("\n\n", "\n")
+
+class CorePipe:
+    def __init__(self, name, props):
+        self.name = name
+        self.props = props
+        self.resetMethod()
+        self.resetDbg()
+        self.resetSrc()
+        self.resetExName()
+        self.resetSteps()
+
+    def code(self):
+        return f"""
+      p.ctrl.{self.method}(
+        dbg: "{self.dbg}",
+        sub: &p.core.subscriptions,
+        {self.src}.eraseToAnyPublisher(),
+{self.steps}
+      )
+""".replace("\n\n", "\n")
+
+    def resetDbg(self):
+        capitals = [l for l in self.name if l.isupper()]
+        # Нет заглавных.
+        if len(capitals) == 0:
+            self.dbg = self.name
+            return
+        # Есть заглавные.
+        firstCap = self.name.find(capitals[0])
+        self.dbg = self.name[:firstCap] + "".join(capitals)
+
+    def resetExName(self):
+        firstLetter = self.name[0].capitalize()
+        self.exName = f"""ex{firstLetter}{self.name[1:]}"""
+
+    def resetMethod(self):
+        if "toggle" in self.props:
+            self.method = "pipe"
+        else:
+            self.method = "pipeValue"
+
+    def resetSrc(self):
+        if "core" in self.props:
+            self.src = "p.core." + self.name
+        elif "world" in self.props:
+            self.src = "p.world." + self.name
+        elif "vm" in self.props:
+            self.src = "p.core.vm." + self.name
+        elif "$vm" in self.props:
+            self.src = "p.core.vm.$" + self.name
+        else:
+            # Если это что-то неизвестное заранее, то ищем строку,
+            # отличную от известных ключевых слов.
+            self.src = next(filter(isNotKeyword, self.props))
+
+    def resetSteps(self):
+        if "recent" and "ex" in self.props:
+            self.steps = f"""
+        {{
+          $0.{self.name}.value = $1
+          $0.{self.name}.isRecent = true
+        }},
+        {{
+          $0.{self.name}.isRecent = false
+          $0.{self.exName} = $1
+        }}
+"""
+        elif "recent" in self.props:
+            self.steps = f"""
+        {{
+          $0.{self.name}.value = $1
+          $0.{self.name}.isRecent = true
+        }},
+        {{ m, _ in m.{self.name}.isRecent = false }}
+"""
+        elif "set" in self.props:
+            self.steps = f"""
+        {{ $0.{self.name} = $1 }}
+"""
+        elif "toggle" in self.props:
+            self.steps = f"""
+        {{ $0.{self.name} = true }},
+        {{ $0.{self.name} = false }}
+"""
+        elif "toggleNil" in self.props:
+            self.steps = f"""
+        {{ $0.{self.name} = $1 }},
+        {{ m, _ in m.{self.name} = nil }}
+"""
+
+class ServiceAction:
+    def __init__(self, func, sink):
+        self.func = func
+        self.sink = sink
+
+    def code(self):
+        return f"""
+      sp.ctrl.m
+        .compactMap {{ {self.func}($0) }}
+        .receive(on: DispatchQueue.main)
+        .sink {{ v in {self.sink} }}
+        .store(in: &sp.service.subscriptions)
+""".replace("\n\n", "\n")
+
+class ServicePipe:
+    def __init__(self, name, props):
+        self.name = name
+        self.props = props
+        self.resetMethod()
+        self.resetDbg()
+        self.resetSrc()
+        self.resetExName()
+        self.resetSteps()
+
+    def code(self):
+        return f"""
+      sp.ctrl.{self.method}(
+        dbg: "{self.dbg}",
+        {self.src}.eraseToAnyPublisher(),
+{self.steps}
+      )
+""".replace("\n\n", "\n")
+
+    def resetDbg(self):
+        capitals = [l for l in self.name if l.isupper()]
+        # Нет заглавных.
+        if len(capitals) == 0:
+            self.dbg = self.name
+            return
+        # Есть заглавные.
+        firstCap = self.name.find(capitals[0])
+        self.dbg = self.name[:firstCap] + "".join(capitals)
+
+    def resetExName(self):
+        firstLetter = self.name[0].capitalize()
+        self.exName = f"""ex{firstLetter}{self.name[1:]}"""
+
+    def resetMethod(self):
+        if "toggle" in self.props:
+            self.method = "pipe"
+        else:
+            self.method = "pipeValue"
+
+    def resetSrc(self):
+        if "service" in self.props:
+            self.src = "sp.service." + self.name
+        elif "world" in self.props:
+            self.src = "sp.world." + self.name
+        else:
+            # Если это и не сервис, и не мир, то
+            # ищем строку, отличную от известных ключевых слов.
+            self.src = next(filter(isNotKeyword, self.props))
+
+    def resetSteps(self):
+        if "recent" and "ex" in self.props:
+            self.steps = f"""
+        {{
+          $0.{self.name}.value = $1
+          $0.{self.name}.isRecent = true
+        }},
+        {{
+          $0.{self.name}.isRecent = false
+          $0.{self.exName} = $1
+        }}
+"""
+        elif "recent" in self.props:
+            self.steps = f"""
+        {{
+          $0.{self.name}.value = $1
+          $0.{self.name}.isRecent = true
+        }},
+        {{ m, _ in m.{self.name}.isRecent = false }}
+"""
+        elif "set" in self.props:
+            self.steps = f"""
+        {{ $0.{self.name} = $1 }}
+"""
+        elif "toggle" in self.props:
+            self.steps = f"""
+        {{ $0.{self.name} = true }},
+        {{ $0.{self.name} = false }}
+"""
+        elif "toggleNil" in self.props:
+            self.steps = f"""
+        {{ $0.{self.name} = $1 }},
+        {{ m, _ in m.{self.name} = nil }}
+"""
+
+class State:
+    isCoreAction = False
+    isCoreController = False
+    isServiceAction = False
+    isServiceController = False
+
+def generatePlatform(coreActions, corePipes, serviceActions, servicePipes):
+    corePlatform = ""
+    if len(coreActions) > 0 or len(corePipes) > 0:
+        corePlatform = f"""
+    static func setupPlatform(_ p: CoreParameters) {{
+{coreActions}
+{corePipes}
+    }}
+"""
+
+    return f"""
+// ВНИМАНИЕ: Сгенерировано автоматом, не менять руками!
+
+extension {MODULE} {{
+  enum SectionGenerated {{
+{corePlatform}
+    static func setupPlatform(_ sp: ServiceParameters) {{
+{serviceActions}
+{servicePipes}
+    }}
+  }}
+}}
+"""
+
+def generateCoreAction(ln):
+    parts = ln.split(": ")
+    if len(parts) != 2:
+        return None
+    func = parts[0].lstrip()
+    sink = parts[1].rstrip()
+    action = CoreAction(func, sink)
+    return action.code()
+
+def generateCorePipe(ln):
+    parts = ln.split(": [")
+    if len(parts) != 2:
+        return None
+    name = parts[0].lstrip()
+    props = parts[1][:-1].split(", ")
+    pipe = CorePipe(name, props)
+    return pipe.code()
+
+def generateServiceAction(ln):
+    parts = ln.split(": ")
+    if len(parts) != 2:
+        return None
+    func = parts[0].lstrip()
+    sink = parts[1].rstrip()
+    action = ServiceAction(func, sink)
+    return action.code()
+
+def generateServicePipe(ln):
+    parts = ln.split(": [")
+    if len(parts) != 2:
+        return None
+    name = parts[0].lstrip()
+    props = parts[1][:-1].split(", ")
+    pipe = ServicePipe(name, props)
+    return pipe.code()
+
+def readFile(fileName):
+    lines = []
+    with open(fileName) as file:
+        for line in file:
+            lines.append(line.rstrip())
+    return lines
+
+def resetState(ln):
+    if ln.startswith("ca:"):
+        state.isCoreAction = True
+        state.isCoreController = False
+        state.isServiceAction = False
+        state.isServiceController = False
+    elif ln.startswith("cp:"):
+        state.isCoreAction = False
+        state.isCoreController = True
+        state.isServiceAction = False
+        state.isServiceController = False
+    elif ln.startswith("sa:"):
+        state.isCoreAction = False
+        state.isCoreController = False
+        state.isServiceAction = True
+        state.isServiceController = False
+    elif ln.startswith("sp:"):
+        state.isCoreAction = False
+        state.isCoreController = False
+        state.isServiceAction = False
+        state.isServiceController = True
+    return state
+
+def saveFile(fileName, data):
+    with open(fileName, "w") as file:
+        file.write(data)
+
+def validateVersion(ln):
+    if ln.startswith("version: 1") == False:
+        print("ERROR: Invalid version")
+        sys.exit(1)
+
+
+# Main
+state = State()
+print(f"Generating platform for module '{MODULE}'...")
+fileIn = args.input or f"{DIR}/../../../Modules/{MODULE}/{MODULE}.yml"
+fileOut = args.output or f"{DIR}/../../../Modules/{MODULE}/src"
+fileOut = os.path.join(fileOut, f'{MODULE}.SectionGenerated.swift')
+lines = readFile(fileIn)
+validateVersion(lines[0])
+coreActions = ""
+corePipes = ""
+serviceActions = ""
+servicePipes = ""
+for ln in lines:
+    st = resetState(ln)
+    if st.isCoreAction:
+        action = generateCoreAction(ln)
+        if action:
+            coreActions += action
+    if st.isCoreController:
+        pipe = generateCorePipe(ln)
+        if pipe:
+            corePipes += pipe
+    if st.isServiceAction:
+        action = generateServiceAction(ln)
+        if action:
+            serviceActions += action
+    if st.isServiceController:
+        pipe = generateServicePipe(ln)
+        if pipe:
+            servicePipes += pipe
+result = generatePlatform(coreActions, corePipes, serviceActions, servicePipes)
+saveFile(fileOut, result)

@@ -1,0 +1,2 @@
+      Section%NAME%.setupService(ctrl, self, world)
+      SectionGenerated.setupPlatform(ctrl, self, world)

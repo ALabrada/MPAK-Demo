@@ -1,0 +1,17 @@
+  // MARK: - Core
+
+  final class Core {
+%CORE_VM%
+    var subscriptions = [AnyCancellable]()
+%CORE_WINDOW%
+
+    deinit {
+      /**/aelog("😟 %MODULE_SHORT%Core.deinit")
+%CORE_SECTIONS_DESTROY%
+    }
+
+    init(_ ctrl: %MODULE%.Controller, _ world: %MODULE%.World) {
+      /**/aelog("😀 %MODULE_SHORT%Core.init")
+%CORE_SECTIONS_SETUP%
+    }
+  }

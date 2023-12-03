@@ -1,0 +1,13 @@
+      ctrl.%PIPE%(
+        dbg: "%SHORT_SRC%",
+        sub: %SUB%,
+        %SRC%.eraseToAnyPublisher(),
+        {
+          $0.%NAME%.value = $1
+          $0.%NAME%.isRecent = true
+        },
+        {
+          $0.%NAME%.isRecent = false
+          $0.%EX_NAME% = $1
+        }
+      )

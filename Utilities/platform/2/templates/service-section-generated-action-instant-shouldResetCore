@@ -1,0 +1,7 @@
+      ctrl.m
+        .compactMap { shouldResetCore($0) }
+        .sink { v in
+          service.core = v ? Core(ctrl, world) : nil
+          world.isCoreRunning.send(v)
+        }
+        .store(in: &service.subscriptions)

@@ -1,0 +1,3 @@
+      ctrl.m
+        .sink { v in world.model.send(v) }
+        .store(in: &service.subscriptions)

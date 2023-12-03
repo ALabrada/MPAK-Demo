@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+import os
+import sys
+from datetime import datetime
+
+class Module:
+    def __init__(
+        self,
+        dir: str,   
+        name: str,
+        vm = False,
+        component = False,
+        handle = False,
+        view = False
+    ) -> None:
+        self.dir = dir
+        self.name = name
+        self.short_name = ''.join(l for l in self.name if l.isupper() or l.isdigit())
+        self.path = os.path.join(dir, name)
+        self.src_path = os.path.join(self.path, 'src')
+        self.vm = vm
+        self.component = component
+        self.handle = handle
+        self.view = view
+        
+    def _create_podspec(self):
+        file_name = f'{self.name}.podspec'
+        path = os.path.join(self.path, file_name)
+        with open(path, 'w') as fp:
+            fp.write(f"""Pod::Spec.new do |s|
+
+s.name                  = '{self.name}'
+s.version               = '{datetime.now().strftime('%Y.%m.%d')}'
+s.license               = 'IVCS'
+s.summary               = 'IVCS'
+s.homepage              = 'IVCS'
+s.author                = 'IVCS'
+s.source                = {{ :git => 'https://fake.com/FAKE.git', :tag => s.version }}
+s.source_files          = '**/*.{{swift,yml}}'
+s.swift_version         = '5.2'
+s.ios.deployment_target = '14.0'
+s.dependency 'AELog'
+s.dependency 'MPAK'
+end""")
+            
+    def _create_platform(self):
+        file_name = f'{self.name}.yml'
+        path = os.path.join(self.path, file_name)
+        with open(path, 'w') as fp:
+            fp.write('version: 2\n')
+            
+    def _generate_code(self):
+        if not os.path.isdir(self.src_path):
+            os.mkdir(self.src_path)
+        self._generate_main()
+        self._generate_shoulds()
+        self._generate_component()
+        self._generate_handle()
+        self._generate_viewmodel()
+        self._generate_view()  
+        self._generate_shoulds()         
+    
+    def _generate_main(self):
+        file_name = f'{self.name}.swift'
+        path = os.path.join(self.src_path, file_name)
+        with open(path, 'w') as fp:
+            fp.write(f"""
+typealias {self.short_name} = {self.name}
+
+public enum {self.name} {{}}
+""")    
+            
+    def _generate_component(self):
+        if not self.component:
+            return
+        file_name = f'{self.name}.Component.swift'
+        path = os.path.join(self.src_path, file_name)
+        with open(path, 'w') as fp:
+            fp.write(f"""import AELog
+import Combine
+
+extension {self.name} {{
+  final class Component: ObservableObject {{
+    var subscriptions = [AnyCancellable]()
+
+    deinit {{
+      /**/aelog("😟 {self.short_name}C.deinit")
+    }}
+
+    public init() {{
+      /**/aelog("😀 {self.short_name}C.init")
+    }}
+  }}
+}}
+""")  
+            
+    def _generate_handle(self):
+        if not self.handle:
+            return
+        file_name = f'{self.name}.Handle.swift'
+        path = os.path.join(self.src_path, file_name)
+        with open(path, 'w') as fp:
+            fp.write(f"""import AELog
+import Combine
+
+extension {self.name} {{
+  public final class Handle {{
+    var subscriptions = [AnyCancellable]()
+
+    deinit {{
+      /**/aelog("😟 {self.short_name}H.deinit")
+    }}
+
+    public init() {{
+      /**/aelog("😀 {self.short_name}H.init")
+    }}
+  }}
+}}
+""")  
+            
+    def _generate_shoulds(self):
+        file_name = f'{self.name}.Shoulds.swift'
+        path = os.path.join(self.src_path, file_name)
+        with open(path, 'w') as fp:
+            fp.write(f"""
+extension {self.name} {{  
+}}
+""")  
+            
+    def _generate_viewmodel(self):
+        if not self.vm:
+            return
+        file_name = f'{self.name}.VM.swift'
+        path = os.path.join(self.src_path, file_name)
+        with open(path, 'w') as fp:
+            fp.write(f"""import Combine
+
+extension {self.name} {{
+  final class VM: ObservableObject {{
+  }}
+}}
+""")  
+            
+    def _generate_view(self):
+        if not self.view:
+            return
+        file_name = f'{self.name}.V.swift'
+        path = os.path.join(self.src_path, file_name)
+        
+        ctor = ''
+        if self.component:
+            ctor = """@StateObject private var vm = Component()
+
+    public init() {}
+"""
+        elif self.vm:
+            ctor = """@ObservedObject private var vm: VM
+
+    public init(_ vm: VM) {
+      self.vm = vm
+    }
+"""
+        
+        with open(path, 'w') as fp:
+            fp.write(f"""import SwiftUI
+
+extension {self.name} {{
+  public struct V: View {{
+    {ctor}
+
+    public var body: some View {{
+      Text("Hello World!")
+    }}
+  }}
+}}
+""")  
+            
+    def save(self):
+        print('Creating module ', self.name)
+        if not os.path.isdir(self.path):
+            os.mkdir(self.path)
+        
+        self._create_podspec()
+        self._create_platform()
+        self._generate_code()
+        print('Creation completed!')
+    
+def interactive(dir: str):
+    while True:
+        name = input('Enter the module name or quit:')
+        name = name.strip()
+        if not name:
+            break
+        
+        component = input('Do you want to include the Component? (y/n) ')
+        handle = input('Do you want to include the Handle? (y/n) ')
+        vm = input('Do you want to include the ViewModel? (y/n) ')
+        view = input('Do you want to include the View? (y/n) ')
+        
+        module = Module(
+            dir=dir,
+            name=name,
+            component=component.strip().lower() == 'y',
+            handle=handle.strip().lower() == 'y',
+            vm=vm.strip().lower() == 'y',
+            view=view.strip().lower() == 'y'
+        )
+        module.save()
+
+def main():
+    from argparse import ArgumentParser
+    
+    parser = ArgumentParser(
+        prog='CreateModule',
+        description='Module generator'
+    )
+    parser.add_argument('name', type=str, nargs='*',
+                        help='the name(s) of the module(s) to generate')    
+    parser.add_argument('-c', '--component', action='store_true',
+                        help='include the Component')
+    parser.add_argument('-m', '--viewmodel', action='store_true',
+                        help='include the ViewModel')
+    parser.add_argument('-v', '--view', action='store_true',
+                        help='include the View')
+    
+    args = parser.parse_args()
+    dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    dir = os.path.join(dir, '..', 'Modules')
+    
+    if args.name:
+        for name in args.name:
+            module = Module(
+                dir=dir,
+                name=name,
+                vm=args.viewmodel,
+                component=args.component,
+                view=args.view,
+            )
+            module.save()
+    else:
+        interactive(dir)
+
+if __name__ == "__main__":
+    main()

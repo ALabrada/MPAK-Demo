@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+import os
+import sys
+import json
+import subprocess
+from datetime import datetime
+from hashlib import sha256
+from tempfile import TemporaryDirectory
+from shutil import copyfile
+
+FILENAME = 'Platfile'
+LOCKFILE = FILENAME + '.lock'
+VERSION = '2.0'
+
+def initialize(dir: str):
+    print('Initializing ', FILENAME)
+    dir_modules = os.path.join(dir, '..', '..', 'Modules')
+    path = os.path.join(dir, FILENAME)
+    with open(path, 'w') as file:
+        entries = os.listdir(dir_modules)
+        for entry in entries:
+            if os.path.isfile(os.path.join(dir_modules, entry, entry + '.yml')):
+                file.write(entry + '\n')
+
+def generate(dir: str, generator: str):
+    path = os.path.join(dir, FILENAME)
+    with open(path) as file:
+        modules = file.readlines()
+        modules = set(m.strip() for m in modules if m.strip())
+        
+    modules = sorted(modules)
+    dir_modules = os.path.join(dir, '..', '..', 'Modules')
+    
+    print(f'Generating modules: {len(modules)}')
+    generator = generator or os.path.join(dir, 'generate-platform')
+    
+    for module in modules:
+        src_dir = os.path.join(dir_modules, module, 'src')
+        with TemporaryDirectory() as tmpdir:
+            subprocess.call([generator, module, '-o', tmpdir])
+            _merge_changes(tmpdir, src_dir)
+    
+    if os.path.exists(LOCKFILE):        
+        os.remove(LOCKFILE)
+    
+            
+def _merge_changes(src_dir: str, dst_dir: str):
+    for file_name in os.listdir(src_dir):
+        src_file = os.path.join(src_dir, file_name)
+        src_hash = _hash_file(src_file)
+        
+        dst_file = os.path.join(dst_dir, file_name)
+        if os.path.exists(dst_file):
+            dst_hash = _hash_file(dst_file)
+            if src_hash == dst_hash:
+                return 
+        
+        copyfile(src_file, dst_file)
+        print('Updated file: ', file_name)
+
+def _hash_file(path: str):
+    alg = sha256()
+    with open(path, 'rb') as file:
+        for line in file.readlines():
+            if line:
+                alg.update(line)
+    return alg.hexdigest()
+
+def main():
+    from argparse import ArgumentParser
+    
+    parser = ArgumentParser(
+        prog='GeneratePlatforms',
+        description='Automatic code generator'
+    )
+    parser.add_argument('-i', '--init', action='store_true')
+    parser.add_argument('-g', '--generator', type=str)
+    
+    args = parser.parse_args()
+    dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    if args.init:
+        initialize(dir)
+    else:
+        generate(dir, args.generator)
+
+if __name__ == "__main__":
+    main()

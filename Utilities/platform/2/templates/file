@@ -1,0 +1,68 @@
+// ВНИМАНИЕ Сгенерировано автоматом из файла %MODULE%.yml
+// ВНИМАНИЕ Не менять руками!
+
+%IMPORTS%
+
+// MARK: - Context
+
+public protocol %MODULE%Context {
+%CONTEXT_FIELDS%
+}
+
+// MARK: - Controller
+
+extension %MODULE% {
+  final class Controller: MPAK.Controller<%MODULE%.Model> {
+    init() {
+      super.init(
+        %MODULE%.Model(),
+        debugClassName: "%MODULE_SHORT%Ctrl",
+        debugLog: { aelog($0) }
+      )
+    }
+  }
+
+%CORE%
+
+  // MARK: - Model
+
+  public struct Model: %MODULE%Context {
+%MODEL_FIELDS%
+  }
+
+  // MARK: - Service
+
+  public final class Service {
+    let ctrl = Controller()
+    let world: World
+%SERVICE_CORE%
+    var subscriptions = [AnyCancellable]()
+    static private(set) weak var singleton: Service?
+
+    public init(_ world: World) {
+      self.world = world
+      Self.singleton = self
+%SERVICE_SECTIONS%
+    }
+  }
+
+  // MARK: - World
+
+  public struct World {
+%WORLD_FIELDS%
+
+    public init(
+%WORLD_PARAMETERS%
+    ) {
+%WORLD_CONSTRUCTOR%
+    }
+  }
+
+  enum SectionGenerated {
+
+%CORE_SECTION_GENERATED%
+
+%SERVICE_SECTION_GENERATED%
+
+  }
+}

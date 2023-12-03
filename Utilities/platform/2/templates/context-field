@@ -1,0 +1,2 @@
+  var %NAME%: %TYPE% { get }
+  var %NAME%: MPAK.Recent<%TYPE%> { get }

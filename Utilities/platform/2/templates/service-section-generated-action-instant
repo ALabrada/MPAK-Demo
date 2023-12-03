@@ -1,0 +1,4 @@
+      ctrl.m
+        .compactMap { %SHOULD%($0) }
+        .sink { v in %SINK% }
+        .store(in: &service.subscriptions)

@@ -1,0 +1,8 @@
+      ctrl.m
+        .compactMap { shouldLoad%NAME%($0) }
+        .flatMap { v -> AnyPublisher<Net.Result%NAME%, Never> in
+          world.net().%REQUEST%(v).eraseToAnyPublisher()
+        }
+        .receive(on: DispatchQueue.main)
+        .sink { v in world.result%NAME%.send(v) }
+        .store(in: &%SUB%.subscriptions)
