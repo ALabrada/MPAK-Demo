@@ -5,6 +5,8 @@
 //  Created by Administrator on 03.12.2023.
 //
 
+import Home
+import Login
 import SwiftUI
 
 struct ContentView: View {

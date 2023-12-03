@@ -11,4 +11,5 @@ s.source_files          = '**/**/*.{swift,yml}'
 s.swift_version         = '5.2'
 s.ios.deployment_target = '14.0'
 s.dependency 'MPAK'
+s.dependency 'Net'
 end

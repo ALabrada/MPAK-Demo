@@ -2,10 +2,12 @@ PODS:
   - Bolts/Tasks (1.9.1)
   - Home (2023.12.03):
     - MPAK
+    - Net
   - HomeSlot (2023.12.03):
     - Home
   - Login (2023.12.03):
     - MPAK
+    - Net
   - LoginSlot (2023.12.03):
     - Login
   - MPAK (2022.06.20)
@@ -46,9 +48,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Bolts: 8c1e8aab2f603387b8b9924f57d1d64f43d3ffdc
-  Home: b8b3d606ee4aaa9ea8c22fa3c544d29262f98cc7
+  Home: 90ded3519bc238c0a52aacfb34ea1d47f990d0a0
   HomeSlot: ddd4a284956df7647e2b864c37bff377e49493de
-  Login: b0a4ee0f0f15d8252ad12142cb8193e1df5608a4
+  Login: 682a08ae3c330023b31b9d47f864a6835008d171
   LoginSlot: 487d69e3692abd32195d0d90a00beac9df73977e
   MPAK: df152c0a8ccee421544ff7cada94f8360d6f2808
   Net: 69e9a3ea4af9316939a6ce3ce519a9139565852e
