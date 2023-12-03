@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		633ACF5274B86A3E0E77A45B /* Pods_demo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD7A12AC0672B1A8CB9564DC /* Pods_demo.framework */; };
+		C315522D2B1C8D7E006275CB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C315522C2B1C8D7E006275CB /* AppDelegate.swift */; };
 		C367111F2B1C709C00435FF8 /* demoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C367111E2B1C709C00435FF8 /* demoApp.swift */; };
 		C36711212B1C709C00435FF8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36711202B1C709C00435FF8 /* ContentView.swift */; };
 		C36711232B1C709E00435FF8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C36711222B1C709E00435FF8 /* Assets.xcassets */; };
@@ -16,6 +17,7 @@
 
 /* Begin PBXFileReference section */
 		A43890CA8A3898C1D25169C8 /* Pods-demo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-demo.debug.xcconfig"; path = "Target Support Files/Pods-demo/Pods-demo.debug.xcconfig"; sourceTree = "<group>"; };
+		C315522C2B1C8D7E006275CB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C367111B2B1C709C00435FF8 /* demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C367111E2B1C709C00435FF8 /* demoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = demoApp.swift; sourceTree = "<group>"; };
 		C36711202B1C709C00435FF8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -75,8 +77,9 @@
 		C367111D2B1C709C00435FF8 /* demo */ = {
 			isa = PBXGroup;
 			children = (
-				C367111E2B1C709C00435FF8 /* demoApp.swift */,
+				C315522C2B1C8D7E006275CB /* AppDelegate.swift */,
 				C36711202B1C709C00435FF8 /* ContentView.swift */,
+				C367111E2B1C709C00435FF8 /* demoApp.swift */,
 				C36711222B1C709E00435FF8 /* Assets.xcassets */,
 				C36711242B1C709E00435FF8 /* Preview Content */,
 			);
@@ -223,6 +226,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C315522D2B1C8D7E006275CB /* AppDelegate.swift in Sources */,
 				C36711212B1C709C00435FF8 /* ContentView.swift in Sources */,
 				C367111F2B1C709C00435FF8 /* demoApp.swift in Sources */,
 			);
